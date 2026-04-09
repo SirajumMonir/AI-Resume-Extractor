@@ -1,0 +1,239 @@
+{
+  "name": "AI Resume Extractor",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI Resume Extractor",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload your Resume (PDF)",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "95776afe-1be0-4d62-bebe-d8f4c65a8701",
+      "name": "On form submission",
+      "webhookId": "bd88a080-68fe-47f1-ac7c-0b2e08ef70de"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "Upload_your_Resume__PDF_",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "577f477e-49a8-4a78-83b6-e87d9120f93e",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Data Extraction AI. I will provide you with the raw extracted text from a candidate's resume/CV. \n\nYour ONLY job is to extract the following 5 specific entities:\n1. Name\n2. Email\n3. Phone\n4. LinkedIn_Link\n5. GitHub_Link\n\nRaw Resume Text:\n{{ $json.text }}\n\nRULES:\n- If a specific field is not found in the resume, output \"Not Found\" for that field.\n- Do NOT output any additional text, conversational greetings, or formatting. \n- Output ONLY a raw, perfectly formatted JSON object.\n\nExample Output format:\n{\n  \"Name\": \"John Doe\",\n  \"Email\": \"john@example.com\",\n  \"Phone\": \"+1234567890\",\n  \"LinkedIn_Link\": \"https://linkedin.com/in/johndoe\",\n  \"GitHub_Link\": \"Not Found\"\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        400,
+        0
+      ],
+      "id": "807c27b8-4e2b-4dcc-8898-a6b585fca380",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        368,
+        160
+      ],
+      "id": "d8a4f0f9-91f2-4068-a3be-e998bf1b2312",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "N9dL46qtTPGOIjpt",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appnLNuaHYplubBT2",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblcE539s6uBOwzar",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ JSON.parse($json.text).Name }}",
+            "Email": "={{ JSON.parse($json.text).Email }}",
+            "Phone": "={{ JSON.parse($json.text).Phone }}",
+            "LinkedIn_Link": "={{ JSON.parse($json.text).LinkedIn_Link }}",
+            "GitHub_Link": "={{ JSON.parse($json.text).GitHub_Link }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn_Link",
+              "displayName": "LinkedIn_Link",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "GitHub_Link",
+              "displayName": "GitHub_Link",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        0
+      ],
+      "id": "64d6d437-f9dd-4b2c-97f0-2cdd69cc7dd4",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "7y4SO0MEbY81bpGG",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b6e6a06e-88d9-4006-a79a-17525c0b711f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7118959e1ad18fc85a3dafbee478e12e6dd7dc52dc2b23d0535b7764f79c7994"
+  },
+  "id": "tmeok3XOIRN1b4fS",
+  "tags": []
+}
